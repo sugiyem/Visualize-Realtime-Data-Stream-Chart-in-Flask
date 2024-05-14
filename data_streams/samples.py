@@ -12,7 +12,9 @@ def random_nr():
 random_nr_config = Config(_name = "Random Number Stream")
 
 def random_loc():
-    return [round(random() * 10, 3) for _ in range(8)]
+    x = randrange(0, 100) / 100
+    y = x ** 2
+    return [x, y] + [round(random() * 10, 3) for _ in range(6)]
 
 random_loc_config = Config(_name = "Location Stream")
 

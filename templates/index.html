@@ -137,41 +137,6 @@
       listview.appendChild(card);
     }
 
-    function create_new_config(data) {
-      // create configs for all charts
-      switch (data.type) {
-        case 'line':
-          return simple_config(data);
-          break;
-        case 'bar':
-          return simple_config(data);
-          break;
-        case 'pie':
-          return no_axis_config(data);
-          break;
-        case 'radar':
-          return no_axis_config(data);
-          break;
-        case 'polarArea':
-          return no_axis_config(data);
-          break;
-        case 'doughnut':
-          return no_axis_config(data);
-          break;
-        case 'horizontalBar':
-          return simple_config(data);
-          break;
-        case 'bubble':
-          return simple_config(data);
-          break;
-        case 'custom':
-          return custom_config(data);
-          break;
-        default:
-
-      }
-    }
-
     function custom_config(data) {
       return data.config;
     }
@@ -179,13 +144,23 @@
     function generate_dataset(data) {
       var datasets = []
       for (i = 0; i < data.legend.length; i++) {
-        datasets.push({
+        if (data.isLoc) {
+          datasets.push({
+          label: data.legend[i],
+          backgroundColor: data.backgroundColor[i],
+          borderColor: data.borderColor[i],
+          data: [{x: data.x[i], y: data.y[i]}],
+          fill: false, 
+        });
+        } else {
+          datasets.push({
           label: data.legend[i],
           backgroundColor: data.backgroundColor[i],
           borderColor: data.borderColor[i],
           data: [data.value[i]],
           fill: false, 
         });
+        }
       }
       return datasets;
     }
@@ -194,7 +169,7 @@
       var datasets = generate_dataset(data);
       //  console.log(datasets);
       return config = {
-        type: data.type,
+        type:  data.isLoc ? "scatter" : data.type,
         id: data.id,
 
         width: data.width,
@@ -225,7 +200,7 @@
     function simple_config(data) {
       var datasets = generate_dataset(data);
       return config = {
-        type: data.type,
+        type: data.isLoc ? "scatter" : data.type,
         id: data.id,
 
         width: data.width,
@@ -254,14 +229,15 @@
               display: true,
               scaleLabel: {
                 display: true,
-                labelString: 'Time'
-              }
+                labelString: 'x'
+              },
+
             }],
             yAxes: [{
               display: true,
               scaleLabel: {
                 display: true,
-                labelString: data.label
+                labelString: 'y'
               }
             }]
           }
@@ -297,182 +273,6 @@
     function handle_request(data) {
         var config;
         var ctx;
-
-        if (data.type == "video_stream") {
-          if (document.getElementById(data.id)) {
-          } else {
-            var container = document.createElement("DIV");
-            var title = document.createElement("H1");
-            title.style.textAlign = "center";
-            var node = document.createTextNode(data.name);
-            title.appendChild(node);
-            container.appendChild(title);
-            var image = document.createElement("IMG");
-            image.className = "image";
-            image.id = data.id;
-            image.style.height = '100%';
-            image.style.width = '100%';
-            image.src = "/video_feed/" + data.value.split("/").join("skipableslash");
-            //console.log(image.src)
-            container.appendChild(image);
-            new_card(container);
-          }
-          return;
-        }
-
-        if (data.type == "map") {
-          if (document.getElementById("mapdiv")) {
-           
-          } else {
-            //data.markers - [{lat: x, lng: y}] 
-            //data.zoom - how much to zoom
-            // data.center - how much to 
-            // 
-
-            var container = document.createElement("DIV");
-            var title = document.createElement("H1");
-            title.style.textAlign = "center";
-            var node = document.createTextNode(data.name); 
-            title.appendChild(node);
-            container.appendChild(title);
-
-            var mapdiv = document.createElement("DIV");
-            mapdiv.id = "mapdiv";
-            mapdiv.className = "mapdiv";
-            
-            mapdiv.style.height = '100%';
-            mapdiv.style.width = '100%';
-            
-            mapboxgl.accessToken = '<your access token here>';
-
-        var map = new mapboxgl.Map({
-        container: mapdiv, // container id
-        style:{
-        'version': 8,
-        'sources': {
-          'raster-tiles': {
-            'type': 'raster',
-            'tiles': [
-              'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'
-            ],
-            'tileSize': 256,
-          }
-        },
-        'layers': [{
-          'id': 'simple-tiles',
-          'type': 'raster',
-          'source': 'raster-tiles',
-          'minzoom': 0,
-          'maxzoom': 22
-                    }]
-                  },
-            center: [-74.5, 40], // starting position
-            zoom: 2 // starting zoom
-            });
-
-           // mapdiv.appendChild(map);
-            container.appendChild(mapdiv);
-            new_card(container);
-
-            
-
-          }
-          return;
-        }
-
-
-
-
-        //console.log(data)
-        //const zeros = (m, n) => [...Array(m)].map(e => Array(n).fill(0));
-
-        if (data.type == "heatmap") {
-          if (document.getElementById(data.id)) {
-            // set heatmap
-            var parent = document.getElementById(data.id);
-            var div = parent.firstChild;
-            var arr = div.data[0].z
-            var d = data.value
-            arr[d[0]][d[1]] += 1;
-            //Plotly.update(div, arr)
-            Plotly.redraw(div, arr);
-          }
-          else {
-            var heatmaparray = new Array(data.width).fill(0).map(() => new Array(data.height).fill(0));
-            var d = data.value;
-            heatmaparray[d[0]][d[1]] += 1;
-            var heatmap = [
-              {
-                z: heatmaparray,
-                type: 'heatmap'
-              }
-            ];
-            var layout = {
-              title: data.name,
-              autosize: true
-            };
-            // create new card
-            var div_con = document.createElement("DIV");
-            var div = document.createElement("DIV");
-            div_con.id = data.id;
-            div.style.width = "100%";
-            Plotly.newPlot(div, heatmap, layout);
-            div_con.appendChild(div);
-            new_card(div_con);
-          }
-          return;
-        }
-
-        if (data.type == "image") {
-          if (document.getElementById(data.id)) {
-            var image = document.getElementById(data.id);
-            image.src = data.value;
-          } else {
-            var container = document.createElement("DIV");
-            var title = document.createElement("H1");
-            title.style.textAlign = "center";
-            var node = document.createTextNode(data.name);
-            title.appendChild(node);
-            container.appendChild(title);
-
-            var image = document.createElement("IMG");
-            image.className = "image";
-            image.id = data.id;
-            image.style.height = '100%';
-            image.style.width = '100%';
-            image.src = data.value;
-            container.appendChild(image);
-            new_card(container);
-          }
-          return;
-        }
-
-        if (data.type == "text") {
-          if (document.getElementById(data.id)) {
-            document.getElementById(data.id).innerHTML += "> " + data.value + "<br />";
-            $('#' + data.id).animate({ scrollTop: $('#' + data.id).prop("scrollHeight") }, 500);
-          } else {
-            var container = document.createElement("DIV");
-            var title = document.createElement("H1");
-            title.style.textAlign = "center";
-            var node = document.createTextNode(data.name);
-            title.appendChild(node);
-            container.appendChild(title);
-
-            var text = document.createElement("DIV");
-            text.className = "text";
-            text.id = data.id;
-            text.style.background = data.backgroundColor;
-            text.style.color = data.borderColor;
-            text.style.height = '500px';
-            text.style.overflow = 'scroll';
-            text.style.width = '100%';
-            text.innerHTML = "> " + data.value + "<br />";
-            container.appendChild(text);
-            new_card(container);
-          }
-          return;
-        }
 
         // if here must be a chart or failed request
         // see if chart is already created
@@ -514,14 +314,22 @@
                 config.data.datasets.forEach(function (datavalue) {
                   if (datavalue.label == data.legend[i]) {
                     data_set = true;
-                    datavalue.data.push(data.value[i]);
+                    if (data.isLoc) {
+                      datavalue.data.push({'x': data.x[i], 'y': data.y[i]});
+                    } else {
+                      datavalue.data.push(data.value[i]);
+                    }
                   }
                 });
               } else {
 
                 if (config.data.datasets[0].label == data.legend[i]) {
                   data_set = true;
-                  config.data.datasets[0].data.push(data.value[i]);
+                  if (data.isLoc) {
+                      config.data.datasets[0].data.push({'x': data.x[i], 'y': data.y[i]});
+                    } else {
+                      config.data.datasets[0].data.push(data.value[i]);
+                    }
                 }
               }
 
@@ -537,13 +345,23 @@
 
               // Create new graph if label doesn't exist.
               if (!data_set) {
-                config.data.datasets.push({
-                  label: [data.legend[i]],
-                  backgroundColor: [data.backgroundColor[i]],
-                  borderColor: [data.borderColor[i]],
-                  data: [data.value[i]],
-                  fill: false,
-                });
+                if (data.isLoc) {
+                  config.data.datasets.push({
+                    label: [data.legend[i]],
+                    backgroundColor: [data.backgroundColor[i]],
+                    borderColor: [data.borderColor[i]],
+                    data: [{'x': data.x[i], 'y': data.y[i]}],
+                    fill: false,
+                  });
+                } else {
+                  config.data.datasets.push({
+                    label: [data.legend[i]],
+                    backgroundColor: [data.backgroundColor[i]],
+                    borderColor: [data.borderColor[i]],
+                    data: [data.value[i]],
+                    fill: false,
+                  });
+                }
               }
             }
 
@@ -554,7 +372,7 @@
           // Create new graph
           var canvas = document.createElement('CANVAS');
           canvas.id = data.id;
-          var config = create_new_config(data);
+          var config = simple_config(data);
 
           //console.log(config);
 
@@ -605,7 +423,7 @@
         <h5 id="RTK_text"></h5>
         <h5 id="HRMS_text"></h5>
         <h5 id="VHRMS_text"></h5>
-      </div>
+      </div margin="20px">
     </div>
   </div>
   </div>

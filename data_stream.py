@@ -9,7 +9,7 @@ This file contains some data structures for better implementation structure.
 
 class Config():
     # Describes the visuals of graphs
-    def __init__(self, _id= 0, _type = 'line', _active_points = 20,
+    def __init__(self, _id= 0, _type = 'line', _active_points = 10,
      _delay = 1, _name = "RealtimeGraph", _label=["Value"], _legend=["data"],
       _width = 200, _height = 100, backgroundColor = ["rgb(255, 99, 132)"],
        borderColor = ["rgb(255, 99, 132)"], fill = "false"):
@@ -64,7 +64,9 @@ class LocDataStream(Thread):
             flask_handler.socketio.emit('server',
             {'id':self.config.id,
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-             'value': [y],
+            'x': [x],
+            'y': [y],
+            'value': [y],
              'lon': lon,
              'lat': lat,
              'height': height,
@@ -74,7 +76,7 @@ class LocDataStream(Thread):
              'type': self.config.type,
              'active_points': self.config.active_points,
              'label': self.config.label,
-             'legend': [x],
+             'legend': self.config.legend,
              'name': self.config.name,
              'width': self.config.width,
              'height': self.config.height,
