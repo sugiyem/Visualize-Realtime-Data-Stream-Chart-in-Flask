@@ -4,9 +4,11 @@
 #import eventlet
 #eventlet.monkey_patch()
 
+import pandas as pd
+import logging
 
 from flask_socketio import SocketIO, emit
-from flask import Flask,Response, render_template, url_for, copy_current_request_context
+from flask import Flask,Response, render_template, url_for, copy_current_request_context, request, jsonify
 
 from threading import Thread, Event
 from scheduler import scheduler
@@ -26,9 +28,13 @@ socketio = SocketIO(app, async_mode="threading")
 thread = Thread() # scheduler thread
 thread_stop_event = Event()
 
+csv_download_count = 0
+
 #lock = threading.Lock()
 
 def start_flask_application():
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
     from config_handler import ConfigHandler
     [HOST,PORT] = ConfigHandler().get_all("Flask") # pylint: disable=unbalanced-tuple-unpacking
     socketio.run(app, host=HOST, port=PORT) # SocketIOServer
@@ -71,6 +77,21 @@ def video_feed(device):
         return Response(gen(int(device)),mimetype = "multipart/x-mixed-replace; boundary=frame")
     except Exception:
         return Response(gen(device),mimetype = "multipart/x-mixed-replace; boundary=frame")
+
+@app.route('/save_csv', methods=['POST'])
+def save_csv():
+    global csv_download_count
+
+    data = request.get_json()
+    print(data)
+    df = pd.DataFrame(data)
+    df.to_csv('output/{}.csv'.format(csv_download_count))
+    
+    return jsonify(message='CSV file saved successfully')
+
+@app.route('/capture', methods=['POST'])
+def capture():
+    pass 
 
 @socketio.on('connect', namespace='/test')
 def test_connect():

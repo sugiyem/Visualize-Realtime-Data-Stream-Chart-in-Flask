@@ -83,6 +83,84 @@
       }
     }
 
+    function capture_func() {
+      // freeze, then do some estimation
+      var btn = document.getElementById('Paus_button');
+      if (!paus) {
+        btn.value = "Continue";
+        paus = false;
+      }
+
+      ChartList.forEach(function(chart) {
+        var config = chart.Config;
+
+        for (let i = 0; i < config.data.datasets.length; i++) {
+          datavalue = config.data.datasets[i];
+          fetch('/capture', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(datavalue)
+          })
+          .then(response => response.json())
+          .catch((error) => {
+            console.alert('Error:', error);
+          })
+        }
+      })
+    }
+
+    function save_csv_func() {
+      // freeze, then save to csv
+
+      ChartList.forEach(function(chart) {
+        var config = chart.config;
+
+        for (let i = 0; i < config.data.datasets.length; i++) {
+          datavalue = config.data.datasets[i];
+          fetch('/save_csv', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(datavalue)
+          })
+          .then(response => response.json())
+          .catch((error) => {
+              console.alert('Error:', error);
+          });
+        }
+      });
+    }
+
+    function save_img_func() {
+      // freeze, then save image 
+      var btn = document.getElementById('Paus_button');
+      if (!paus) {
+        btn.value = "Continue";
+        paus = false;
+      }
+      ChartList.forEach(function(chart) {
+        var link = document.createElement('a');
+        link.href = chart.toBase64Image();
+        link.download = chart.config.id + '.png';
+        link.click();
+      });
+    }
+
+    function connect_func() {
+      //connect to the socket server.
+      var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+      var numbers_received = [];
+
+      //receive socket from server
+      socket.on('server', function (data) {
+        //console.log(data);
+        handle_request(data)
+      });
+    }
+
     function sleep(delay) {
       var start = new Date().getTime();
       while (new Date().getTime() < start + delay);
@@ -137,70 +215,33 @@
       listview.appendChild(card);
     }
 
-    function custom_config(data) {
-      return data.config;
-    }
-
     function generate_dataset(data) {
       var datasets = []
       for (i = 0; i < data.legend.length; i++) {
-        if (data.isLoc) {
-          datasets.push({
+        datasets.push({
           label: data.legend[i],
           backgroundColor: data.backgroundColor[i],
           borderColor: data.borderColor[i],
           data: [{x: data.x[i], y: data.y[i]}],
-          fill: false, 
+          fill: false,
+          x_val: [data.x[i]],
+          y_val: [data.y[i]],
+          datetime: [data.time[i]],
+          lon: [data.lon[i]],
+          lat: [data.lat[i]],
+          heigh: [data.heigh[i]],
+          rtk: [data.rtk[i]],
+          hrms: [data.hrms[i]],
+          vhrms: [data.vhrms[i]]
         });
-        } else {
-          datasets.push({
-          label: data.legend[i],
-          backgroundColor: data.backgroundColor[i],
-          borderColor: data.borderColor[i],
-          data: [data.value[i]],
-          fill: false, 
-        });
-        }
       }
       return datasets;
     }
 
-    function no_axis_config(data) {
-      var datasets = generate_dataset(data);
-      //  console.log(datasets);
-      return config = {
-        type:  data.isLoc ? "scatter" : data.type,
-        id: data.id,
-
-        width: data.width,
-        height: data.height,
-
-        data: {
-          labels: [data.label],
-          datasets: datasets,
-        },
-        options: {
-          responsive: true,
-          title: {
-            display: true,
-            text: data.name
-          },
-          tooltips: {
-            mode: 'index',
-            intersect: false,
-          },
-          hover: {
-            mode: 'nearest',
-            intersect: true
-          },
-        }
-      };
-    }
-
-    function simple_config(data) {
+    function init_config(data) {
       var datasets = generate_dataset(data);
       return config = {
-        type: data.isLoc ? "scatter" : data.type,
+        type: data.type,
         id: data.id,
 
         width: data.width,
@@ -245,37 +286,11 @@
       };
     }
 
-    function capture_func() {
-
-    }
-
-    function save_func() {
-      ChartList.forEach(function(chart) {
-        var link = document.createElement('a');
-        link.href = chart.toBase64Image();
-        link.download = chart.config.id + '.png';
-        link.click();
-      });
-    }
-
-    function connect_func() {
-      //connect to the socket server.
-      var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-      var numbers_received = [];
-
-      //receive socket from server
-      socket.on('server', function (data) {
-        //console.log(data);
-        handle_request(data)
-      });
-    }
-
     function handle_request(data) {
         var config;
         var ctx;
 
-        // if here must be a chart or failed request
-        // see if chart is already created
+        // check if the plot is already created
         if (document.getElementById(data.id)) {
 
           ChartList.forEach(function (chart) {
@@ -288,91 +303,76 @@
             return;
           }
 
-          if (data.type == "custom") {
-            config = data.config
-            ctx.update();
+          // Shift Chart
+          if (config.data.labels.length === data.active_points) {
+            config.data.labels.shift();
+            config.data.datasets.forEach(function (datavalue) {
+              datavalue.data.shift();
+            });
+          }
 
-          } else {
+          // Add new Value
+          config.data.labels.push(data.time);
+          var data_set = false;
 
-            // Shift Chart
-            if (config.data.labels.length === data.active_points) {
-              config.data.labels.shift();
-              config.data.datasets.forEach(function (datavalue) {
-                datavalue.data.shift();
+          var j = data.legend.length;
+          for (i = 0; i < j; i++) {
+
+            config.data.datasets.forEach(function (datavalue) {
+              if (datavalue.label == data.legend[i]) {
+                data_set = true;
+                datavalue.data.push({'x': data.x[i], 'y': data.y[i]});
+                datavalue.x_val.push(data.x[i]);
+                datavalue.y_val.push(data.y[i]);
+                datavalue.datetime.push(data.time[i]);
+                datavalue.lon.push(data.lon[i]);
+                datavalue.lat.push(data.lat[i]);
+                datavalue.heigh.push(data.heigh[i]);
+                datavalue.rtk.push(data.rtk[i]);
+                datavalue.hrms.push(data.hrms[i]);
+                datavalue.vhrms.push(data.vhrms[i]);
+              }
+            });
+
+            // Create new graph if label doesn't exist.
+            if (!data_set) {
+              config.data.datasets.push({
+                label: [data.legend[i]],
+                backgroundColor: [data.backgroundColor[i]],
+                borderColor: [data.borderColor[i]],
+                data: [{'x': data.x[i], 'y': data.y[i]}],
+                fill: false,
+                x_val: [data.x[i]],
+                y_val: [data.y[i]],
+                datetime: [data.time[i]],
+                lon: [data.lon[i]],
+                lat: [data.lat[i]],
+                heigh: [data.heigh[i]],
+                rtk: [data.rtk[i]],
+                hrms: [data.hrms[i]],
+                vhrms: [data.vhrms[i]],
               });
             }
 
-            // Add new Value
-            config.data.labels.push(data.time);
-            var data_set = false;
-
-            var j = data.legend.length;
-            for (i = 0; i < j; i++) {
-
-              if (config.data.datasets.length > 1) {
-
-                config.data.datasets.forEach(function (datavalue) {
-                  if (datavalue.label == data.legend[i]) {
-                    data_set = true;
-                    if (data.isLoc) {
-                      datavalue.data.push({'x': data.x[i], 'y': data.y[i]});
-                    } else {
-                      datavalue.data.push(data.value[i]);
-                    }
-                  }
-                });
-              } else {
-
-                if (config.data.datasets[0].label == data.legend[i]) {
-                  data_set = true;
-                  if (data.isLoc) {
-                      config.data.datasets[0].data.push({'x': data.x[i], 'y': data.y[i]});
-                    } else {
-                      config.data.datasets[0].data.push(data.value[i]);
-                    }
-                }
-              }
-
-              if (data.isLoc) {
-                document.getElementById("Datetime_text").textContent = "Datetime: " + data.time;
-                document.getElementById("Latitude_text").textContent = "Latitude: " + data.lat;
-                document.getElementById("Longitude_text").textContent = "Longitude: " + data.lon;
-                document.getElementById("Height_text").textContent = "Height: " + data.height;
-                document.getElementById("RTK_text").textContent = "RTK: " + data.rtk;
-                document.getElementById("HRMS_text").textContent = "HRMS: " + data.hrms;
-                document.getElementById("VHRMS_text").textContent = "VHRMS: " + data.vhrms;
-              }
-
-              // Create new graph if label doesn't exist.
-              if (!data_set) {
-                if (data.isLoc) {
-                  config.data.datasets.push({
-                    label: [data.legend[i]],
-                    backgroundColor: [data.backgroundColor[i]],
-                    borderColor: [data.borderColor[i]],
-                    data: [{'x': data.x[i], 'y': data.y[i]}],
-                    fill: false,
-                  });
-                } else {
-                  config.data.datasets.push({
-                    label: [data.legend[i]],
-                    backgroundColor: [data.backgroundColor[i]],
-                    borderColor: [data.borderColor[i]],
-                    data: [data.value[i]],
-                    fill: false,
-                  });
-                }
-              }
+            if (i == 0) {
+              document.getElementById("Datetime_text").textContent = "Datetime: " + data.time[i];
+              document.getElementById("Latitude_text").textContent = "Latitude: " + data.lat[i];
+              document.getElementById("Longitude_text").textContent = "Longitude: " + data.lon[i];
+              document.getElementById("Height_text").textContent = "Height: " + data.heigh[i];
+              document.getElementById("RTK_text").textContent = "RTK: " + data.rtk[i];
+              document.getElementById("HRMS_text").textContent = "HRMS: " + data.hrms[i];
+              document.getElementById("VHRMS_text").textContent = "VHRMS: " + data.vhrms[i];
             }
 
-            ctx.update();
           }
+
+          ctx.update();
         } else {
           // First time new Id appears
           // Create new graph
           var canvas = document.createElement('CANVAS');
           canvas.id = data.id;
-          var config = simple_config(data);
+          var config = init_config(data);
 
           //console.log(config);
 
@@ -401,7 +401,8 @@
         </center>
         <center>
           <input style="display: inline" type="submit" id="Capture_button" value="Capture" onclick="capture_funct();">
-          <input style="display: inline" type="submit" id="Save_button" value="Save" onclick="save_func();">
+          <input style="display: inline" type="submit" id="Save_img_button" value="Save Plot Image" onclick="save_img_func();">
+          <input style="display: inline" type="submit" id="Save_csv_button" value="Save CSV" onclick="save_csv_func();">
           <input style="display: inline" type="submit" id="Connect_button" value="Connect" onclick="connect_func();">
           <input style="display: inline" type="submit" id="Paus_button" value="Pause" onclick="paus_func();">
           <input style="display: inline" type="submit" id="Reset_button" value="Kill" onclick="clear_func();">
