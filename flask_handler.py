@@ -79,7 +79,7 @@ def test_connect():
     print('Flask Client connected')
 
     #Start the generator threads only if the thread has not been started before.
-    if not thread.isAlive():
+    if not thread.is_alive():
         scheduler()
 
 @socketio.on('disconnect', namespace='/test')
