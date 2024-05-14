@@ -1,11 +1,11 @@
 # include new streams to start in this file
 
-from data_streams.samples import samplelist, random_nr_config, random_nr
+from data_streams.samples import samplelist, random_nr_config, random_nr, random_loc_config, random_loc
 
 from socket_client import SocketClient
 from socket_server import SocketServer
 from image_server import ImageServer
-from data_stream import DataStream
+from data_stream import DataStream, LocDataStream
 from http_client import HTTPClient
 from http_server import HTTPserver
 
@@ -41,7 +41,9 @@ def demo():
         SocketClient(message=message).start()
 
     # Start HTTP example client
-    HTTPClient().start()
+    # HTTPClient().start()
 
     # Start Example Random Number Stream
-    DataStream(random_nr_config, random_nr).start()
+    #DataStream(random_nr_config, random_nr).start()
+
+    LocDataStream(random_loc_config, random_loc).start()

@@ -47,9 +47,44 @@ class DataStream(Thread):
              'height': self.config.height,
              "backgroundColor": self.config.backgroundColor,
              "borderColor" : self.config.borderColor,
-             "fill" : self.config.fill},
+             "fill" : self.config.fill,
+             'isLoc': False},
               namespace='/test')
             time.sleep(self.config.delay)
+
+class LocDataStream(Thread):
+    def __init__(self, _config, _data_func):
+        super(LocDataStream, self).__init__()
+        self.data_func = _data_func
+        self.config = _config
+
+    def run(self):
+        while not flask_handler.thread_stop_event.isSet():
+            x, y, lon, lat, height, rtk, hrms, vrhms = self.data_func()
+            flask_handler.socketio.emit('server',
+            {'id':self.config.id,
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+             'value': [y],
+             'lon': lon,
+             'lat': lat,
+             'height': height,
+             'rtk': rtk,
+             'hrms': hrms,
+             'vhrms': vrhms,
+             'type': self.config.type,
+             'active_points': self.config.active_points,
+             'label': self.config.label,
+             'legend': [x],
+             'name': self.config.name,
+             'width': self.config.width,
+             'height': self.config.height,
+             "backgroundColor": self.config.backgroundColor,
+             "borderColor" : self.config.borderColor,
+             "fill" : self.config.fill,
+             "isLoc": True},
+              namespace='/test')
+            time.sleep(self.config.delay)
+
 
 
 def def_param(vari, deff):
