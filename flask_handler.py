@@ -13,6 +13,7 @@ from flask import Flask,Response, render_template, url_for, copy_current_request
 from threading import Thread, Event
 from scheduler import scheduler
 from socket_server import SocketServer
+from estimator import estimate
 
 """
 Flask handler manages the start and connection to Flask website/server.
@@ -91,7 +92,21 @@ def save_csv():
 
 @app.route('/capture', methods=['POST'])
 def capture():
-    pass 
+    data = request.get_json()
+    df = pd.DataFrame(data)
+    displayed_df = df if len(df) < 10 else df.tail(10)
+
+    try:
+        coefs = estimate(displayed_df['x'].to_numpy(), displayed_df['y'].to_numpy()) # curve estimator is y = mx + b
+        b = round(coefs[0], 3)
+        m = round(coefs[1], 3)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+     
+    return jsonify({
+        'weight': m,
+        'bias': b
+    })
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
