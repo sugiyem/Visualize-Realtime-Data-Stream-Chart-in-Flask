@@ -73,85 +73,19 @@
 
     function paus_func() {
       // Toggle paus variable
+      var btn = document.getElementById('Paus_button');
       if (paus) {
+        btn.value = "Pause";
         paus = false;
       } else {
+        btn.value = "Continue";
         paus = true;
-      }
-    }
-
-    function demo_func() {
-      // Toggle paus variable
-      //console.log("demo_change")
-      if (demo_scroll) {
-        demo_scroll = false;
-        $('html, body').stop();
-      } else {
-        demo_scroll = true;
-        start_scroll_animation()
-        //scrollTo(0, 1);
-        //scrollTo(0, 0);
       }
     }
 
     function sleep(delay) {
       var start = new Date().getTime();
       while (new Date().getTime() < start + delay);
-    }
-
-    function start_scroll_animation(){
-    //scroll to bottom
-    setInterval(function(){
-      var slider = document.getElementById("myRange");
-
-    //time to scroll to bottom
-    $("html, body").animate({ scrollTop:  Math.round($(document).height() - $(window).height()) }, { duration: parseInt(slider.value) });
-
-    //scroll to top
-    setTimeout(function() {
-      $('html, body').animate({scrollTop:0},{ duration: parseInt(slider.value) });
-    },2000);//call every 2000 miliseconds
-
-    },2000);//call every 2000 miliseconds
-    }
-
-    function scroll_func() {   
-      if (demo_scroll) {
-        var slider = document.getElementById("myRange");
-        if (Math.round($(window).scrollTop() + $(window).height()) == $(document).height() - 1) {
-          $('html, body').animate({ scrollTop: 0 }, { duration: parseInt(slider.value) });
-        }
-        if (Math.round($(window).scrollTop()) == 0) {
-          $('html, body').animate({ scrollTop: Math.round($(document).height() - $(window).height()) }, { duration: parseInt(slider.value) });
-        }
-      }
-    }
-
-    function resized() {
-      if (demo_scroll) {
-        demo_func();
-        demo_func();
-      }
-    }
-
-    hide = false;
-    function hide_func() {
-      if (hide) {
-        hide = false;
-        // unhide
-      } else {
-        hide = true;
-        $("#buttons").fadeOut("slow", function () {
-          $("#listview").css("margin-top", 0);
-          // Animation complete.
-        });
-        // hide
-      }
-    }
-
-    // calculate distance between two points
-    function calculateDistance(elem, mouseY) {
-      return Math.floor(Math.sqrt(Math.pow(mouseY - (elem.offset().top + (elem.height() / 2)), 2)));
     }
 
     /*
@@ -333,6 +267,31 @@
           }
         }
       };
+    }
+
+    function capture_func() {
+
+    }
+
+    function save_func() {
+      ChartList.forEach(function(chart) {
+        var link = document.createElement('a');
+        link.href = chart.toBase64Image();
+        link.download = chart.config.id + '.png';
+        link.click();
+      });
+    }
+
+    function connect_func() {
+      //connect to the socket server.
+      var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+      var numbers_received = [];
+
+      //receive socket from server
+      socket.on('server', function (data) {
+        //console.log(data);
+        handle_request(data)
+      });
     }
 
     function handle_request(data) {
@@ -566,6 +525,16 @@
                 }
               }
 
+              if (data.isLoc) {
+                document.getElementById("Datetime_text").textContent = "Datetime: " + data.time;
+                document.getElementById("Latitude_text").textContent = "Latitude: " + data.lat;
+                document.getElementById("Longitude_text").textContent = "Longitude: " + data.lon;
+                document.getElementById("Height_text").textContent = "Height: " + data.height;
+                document.getElementById("RTK_text").textContent = "RTK: " + data.rtk;
+                document.getElementById("HRMS_text").textContent = "HRMS: " + data.hrms;
+                document.getElementById("VHRMS_text").textContent = "VHRMS: " + data.vhrms;
+              }
+
               // Create new graph if label doesn't exist.
               if (!data_set) {
                 config.data.datasets.push({
@@ -597,44 +566,9 @@
         }
       }
 
-
-
-
     var paus = false;
     var demo_scroll = false;
     var ChartList = [];
-
-    $(document).ready(function () {
-
-      // Start stop demo with D press
-      document.addEventListener('keyup', (e) => {
-        if (e.code === "KeyD") {
-          demo_func();
-        }
-      });
-
-      // scroll listener
-      /*
-      window.addEventListener('scroll', function (e) {
-        scroll_func();
-      });
-      */
-      /*
-      window.addEventListener('resize', function (event) {
-        resized();
-      });
-      */
-
-      //connect to the socket server.
-      var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-      var numbers_received = [];
-
-      //receive socket from server
-      socket.on('server', function (data) {
-        //console.log(data);
-        handle_request(data)
-      });
-    });
 
   </script>
 </head>
@@ -645,27 +579,14 @@
       style="position: fixed; top: 0;left: 50%; transform:translateX(-50%); width:100%; display: block ruby;">
       <div class="card-body">
         <center>
-          <h1>Realtime Data Stream Charts</h1>
+          <h1>Live Plot</h1>
         </center>
         <center>
-          <input style="display: inline" type="submit" name="Hide_button" value="Hide" onclick="hide_func();">
-          <input style="display: inline" type="submit" name="Reset_button" value="Clear All" onclick="clear_func();">
-          <input style="display: inline" type="submit" name="Paus_button" value="Paus Toggle" onclick="paus_func();">
-          <input style="display: inline-block;" type="submit" name="Theme_button" value="Day/Night"
-            onclick="theme_func();">
-          <div style="display: inline-block;">
-            <center>
-              <p>Start/Stop by pressing "D"!</p>
-              <input type="submit" name="Demo_button" value="Demo Mode" onclick="demo_func();">
-            </center>
-          </div>
-          <div style="display: inline-block;">
-            <center>
-              <p> Demo Slider Speed </p>
-              <input type="range" min="1000" max="60000" value="8000" class="slider" id="myRange">
-            </center>
-          </div>
-
+          <input style="display: inline" type="submit" id="Capture_button" value="Capture" onclick="capture_funct();">
+          <input style="display: inline" type="submit" id="Save_button" value="Save" onclick="save_func();">
+          <input style="display: inline" type="submit" id="Connect_button" value="Connect" onclick="connect_func();">
+          <input style="display: inline" type="submit" id="Paus_button" value="Pause" onclick="paus_func();">
+          <input style="display: inline" type="submit" id="Reset_button" value="Kill" onclick="clear_func();">
       </div>
     </div>
   </center>
@@ -675,7 +596,15 @@
     <div class="row">
       
       <div class="col-12" id="listview" style="z-index: -1;">
-
+      </div>
+      <div>
+        <h5 id="Datetime_text"></h5>
+        <h5 id="Latitude_text"></h5>
+        <h5 id="Longitude_text"></h5>
+        <h5 id="Height_text"></h5>
+        <h5 id="RTK_text"></h5>
+        <h5 id="HRMS_text"></h5>
+        <h5 id="VHRMS_text"></h5>
       </div>
     </div>
   </div>
