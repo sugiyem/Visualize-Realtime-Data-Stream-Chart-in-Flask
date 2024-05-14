@@ -9,7 +9,7 @@ This file contains some data structures for better implementation structure.
 
 class Config():
     # Describes the visuals of graphs
-    def __init__(self, _id= 0, _type = 'line', _active_points = 10,
+    def __init__(self, _id= 0, _type = 'scatter', _active_points = 10,
      _delay = 1, _name = "RealtimeGraph", _label=["Value"], _legend=["data"],
       _width = 200, _height = 100, backgroundColor = ["rgb(255, 99, 132)"],
        borderColor = ["rgb(255, 99, 132)"], fill = "false"):
@@ -34,22 +34,29 @@ class DataStream(Thread):
 
     def run(self):
         while not flask_handler.thread_stop_event.isSet():
-            flask_handler.socketio.emit('server',
-            {'id':self.config.id,
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-             'value': self.data_func(),
-             'type': self.config.type,
-             'active_points': self.config.active_points,
-             'label': self.config.label,
-             'legend': self.config.legend,
-             'name': self.config.name,
-             'width': self.config.width,
-             'height': self.config.height,
-             "backgroundColor": self.config.backgroundColor,
-             "borderColor" : self.config.borderColor,
-             "fill" : self.config.fill,
-             'isLoc': False},
-              namespace='/test')
+            x, y, lon, lat, heigh, rtk, hrms, vrhms = self.data_func()
+            flask_handler.socketio.emit('server',{
+                'id':self.config.id,
+                'time': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+                'x': [x],
+                'y': [y],
+                'lon': [lon],
+                'lat': [lat],
+                'heigh': [heigh],
+                'rtk': [rtk],
+                'hrms': [hrms],
+                'vhrms': [vrhms],
+                'type': self.config.type,
+                'active_points': self.config.active_points,
+                'label': self.config.label,
+                'legend': self.config.legend,
+                'name': self.config.name,
+                'width': self.config.width,
+                'height': self.config.height,
+                "backgroundColor": self.config.backgroundColor,
+                "borderColor" : self.config.borderColor,
+                "fill" : self.config.fill,
+            }, namespace='/test')
             time.sleep(self.config.delay)
 
 class LocDataStream(Thread):
@@ -60,19 +67,19 @@ class LocDataStream(Thread):
 
     def run(self):
         while not flask_handler.thread_stop_event.isSet():
-            x, y, lon, lat, height, rtk, hrms, vrhms = self.data_func()
+            x, y, lon, lat, heigh, rtk, hrms, vrhms = self.data_func()
             flask_handler.socketio.emit('server',
             {'id':self.config.id,
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'time': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
             'x': [x],
             'y': [y],
             'value': [y],
-             'lon': lon,
-             'lat': lat,
-             'height': height,
-             'rtk': rtk,
-             'hrms': hrms,
-             'vhrms': vrhms,
+             'lon': [lon],
+             'lat': [lat],
+             'heigh': [heigh],
+             'rtk': [rtk],
+             'hrms': [hrms],
+             'vhrms': [vrhms],
              'type': self.config.type,
              'active_points': self.config.active_points,
              'label': self.config.label,
@@ -83,8 +90,7 @@ class LocDataStream(Thread):
              "backgroundColor": self.config.backgroundColor,
              "borderColor" : self.config.borderColor,
              "fill" : self.config.fill,
-             "isLoc": True},
-              namespace='/test')
+             }, namespace='/test')
             time.sleep(self.config.delay)
 
 
