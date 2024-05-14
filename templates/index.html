@@ -88,14 +88,25 @@
       var btn = document.getElementById('Paus_button');
       if (!paus) {
         btn.value = "Continue";
-        paus = false;
+        paus = true;
       }
 
       ChartList.forEach(function(chart) {
         var config = chart.Config;
 
         for (let i = 0; i < config.data.datasets.length; i++) {
-          datavalue = config.data.datasets[i];
+          datavalue = {
+            x: config.data.datasets[i].x_val,
+            y: config.data.datasets[i].y_val,
+            datetime: config.data.datasets[i].datetime,
+            lon: config.data.datasets[i].lon,
+            lat: config.data.datasets[i].lat,
+            heigh: config.data.datasets[i].heigh,
+            rtk: config.data.datasets[i].rtk,
+            hrms: config.data.datasets[i].hrms,
+            vhrms: config.data.datasets[i].vhrms
+          }
+          console.log(datavalue);
           fetch('/capture', {
             method: 'POST',
             headers: {
@@ -108,17 +119,33 @@
             console.alert('Error:', error);
           })
         }
-      })
+      });
     }
 
     function save_csv_func() {
       // freeze, then save to csv
+      var btn = document.getElementById('Paus_button');
+      if (!paus) {
+        btn.value = "Continue";
+        paus = true;
+      }
 
       ChartList.forEach(function(chart) {
         var config = chart.config;
 
         for (let i = 0; i < config.data.datasets.length; i++) {
-          datavalue = config.data.datasets[i];
+          datavalue = {
+            x: config.data.datasets[i].x_val,
+            y: config.data.datasets[i].y_val,
+            datetime: config.data.datasets[i].datetime,
+            lon: config.data.datasets[i].lon,
+            lat: config.data.datasets[i].lat,
+            heigh: config.data.datasets[i].heigh,
+            rtk: config.data.datasets[i].rtk,
+            hrms: config.data.datasets[i].hrms,
+            vhrms: config.data.datasets[i].vhrms
+          }
+          
           fetch('/save_csv', {
             method: 'POST',
             headers: {
@@ -139,8 +166,9 @@
       var btn = document.getElementById('Paus_button');
       if (!paus) {
         btn.value = "Continue";
-        paus = false;
+        paus = true;
       }
+
       ChartList.forEach(function(chart) {
         var link = document.createElement('a');
         link.href = chart.toBase64Image();

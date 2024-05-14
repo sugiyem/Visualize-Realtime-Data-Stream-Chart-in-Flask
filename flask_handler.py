@@ -81,9 +81,9 @@ def video_feed(device):
 @app.route('/save_csv', methods=['POST'])
 def save_csv():
     global csv_download_count
+    csv_download_count += 1
 
     data = request.get_json()
-    print(data)
     df = pd.DataFrame(data)
     df.to_csv('output/{}.csv'.format(csv_download_count))
     
