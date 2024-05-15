@@ -14,12 +14,14 @@ from threading import Thread, Event
 from scheduler import scheduler
 from socket_server import SocketServer
 from estimator import estimate
+from data_stream import DataStream, Config
+from queue import Queue
 
 """
 Flask handler manages the start and connection to Flask website/server.
 """
 
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__)
 app.config['DEBUG'] = False # let this be false to only start one webbrowser
 app.config['THREADED'] = True
 
@@ -30,6 +32,8 @@ thread = Thread() # scheduler thread
 thread_stop_event = Event()
 
 csv_download_count = 0
+
+data_queue = Queue()
 
 #lock = threading.Lock()
 
@@ -110,15 +114,39 @@ def capture():
         'yplot_max': xplot_max
     })
 
+@app.route('/data', methods=['POST'])
+def receive_data():
+    data = request.get_json()
+
+    # Extract values from the incoming request
+    timestamp = data.get('time')
+    x = data.get('x')
+    y = data.get('y')
+    lon = data.get('lon')
+    lat = data.get('lat')
+    heigh = data.get('heigh')
+    rtk = data.get('rtk')
+    hrms = data.get('hrms')
+    vrhms = data.get('vhrms')
+    
+    # Put data into the queue
+    data_queue.put((timestamp, x, y, lon, lat, heigh, rtk, hrms, vrhms))
+    
+    return jsonify(message='Data received successfully')
+
 @socketio.on('connect', namespace='/test')
 def test_connect():
     # need visibility of the global thread object
     global thread
     print('Flask Client connected')
 
-    #Start the generator threads only if the thread has not been started before.
     if not thread.is_alive():
-        scheduler()
+        loc_config = Config(_name = "Location Stream", xmin = -2.0, xmax = 2.0, ymin = -2.0, ymax = 2.0)
+        DataStream(loc_config, data_queue).start()
+
+    #Start the generator threads only if the thread has not been started before.
+    #if not thread.is_alive():
+    #    scheduler()
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():

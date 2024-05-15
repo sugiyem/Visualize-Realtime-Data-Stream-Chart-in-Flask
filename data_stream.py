@@ -32,40 +32,43 @@ class Config():
         self.ymax = ymax
 
 class DataStream(Thread):
-    def __init__(self, _config, _data_func):
+    def __init__(self, _config, data_queue):
         super(DataStream, self).__init__()
-        self.data_func = _data_func
+        self.data_queue = data_queue
         self.config = _config
 
     def run(self):
+        print('Data stream running')
         while not flask_handler.thread_stop_event.isSet():
-            x, y, lon, lat, heigh, rtk, hrms, vrhms = self.data_func()
-            flask_handler.socketio.emit('server',{
-                'id':self.config.id,
-                'time': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-                'x': [x],
-                'y': [y],
-                'lon': [lon],
-                'lat': [lat],
-                'heigh': [heigh],
-                'rtk': [rtk],
-                'hrms': [hrms],
-                'vhrms': [vrhms],
-                'type': self.config.type,
-                'active_points': self.config.active_points,
-                'label': self.config.label,
-                'legend': self.config.legend,
-                'name': self.config.name,
-                'width': self.config.width,
-                'height': self.config.height,
-                "backgroundColor": self.config.backgroundColor,
-                "borderColor" : self.config.borderColor,
-                "fill" : self.config.fill,
-                'xmin': self.config.xmin,
-                'xmax': self.config.xmax,
-                'ymin': self.config.ymin,
-                'ymax': self.config.ymax
-            }, namespace='/test')
+            if not self.data_queue.empty():
+                timestamp,x, y, lon, lat, heigh, rtk, hrms, vhrms = self.data_queue.get()
+                flask_handler.socketio.emit('server',{
+                    'id':self.config.id,
+                    'time': [timestamp],
+                    'x': [x],
+                    'y': [y],
+                    'lon': [lon],
+                    'lat': [lat],
+                    'heigh': [heigh],
+                    'rtk': [rtk],
+                    'hrms': [hrms],
+                    'vhrms': [vhrms],
+                    'type': self.config.type,
+                    'active_points': self.config.active_points,
+                    'label': self.config.label,
+                    'legend': self.config.legend,
+                    'name': self.config.name,
+                    'width': self.config.width,
+                    'height': self.config.height,
+                    "backgroundColor": self.config.backgroundColor,
+                    "borderColor" : self.config.borderColor,
+                    "fill" : self.config.fill,
+                    'xmin': self.config.xmin,
+                    'xmax': self.config.xmax,
+                    'ymin': self.config.ymin,
+                    'ymax': self.config.ymax
+                }, namespace='/test')
+            
             time.sleep(self.config.delay)
 
 
