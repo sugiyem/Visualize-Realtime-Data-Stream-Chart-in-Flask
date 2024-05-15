@@ -251,6 +251,7 @@
           borderColor: data.borderColor[i],
           data: [{x: data.x[i], y: data.y[i]}],
           fill: false,
+          showLine: true,
           x_val: [data.x[i]],
           y_val: [data.y[i]],
           datetime: [data.time[i]],
@@ -259,7 +260,7 @@
           heigh: [data.heigh[i]],
           rtk: [data.rtk[i]],
           hrms: [data.hrms[i]],
-          vhrms: [data.vhrms[i]]
+          vhrms: [data.vhrms[i]],
         });
       }
       return datasets;
@@ -299,7 +300,6 @@
                 display: true,
                 labelString: 'x'
               },
-
             }],
             yAxes: [{
               display: true,
@@ -369,6 +369,7 @@
                 borderColor: [data.borderColor[i]],
                 data: [{'x': data.x[i], 'y': data.y[i]}],
                 fill: false,
+                showLine: true,
                 x_val: [data.x[i]],
                 y_val: [data.y[i]],
                 datetime: [data.time[i]],
