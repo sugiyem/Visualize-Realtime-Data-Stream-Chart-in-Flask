@@ -58,3 +58,4 @@ wsproto==1.2.0
 yahoo-fin==0.8.2
 zipp==3.18.1
 eventlet
+gunicorn
