@@ -6,7 +6,6 @@
 
 import pandas as pd
 import logging
-import os
 
 from flask_socketio import SocketIO
 from flask import Flask, render_template, request, jsonify
@@ -15,7 +14,6 @@ from threading import Thread, Event
 from estimator import estimate
 from data_stream import DataStream, Config
 from queue import Queue
-from datetime import datetime
 
 
 app = Flask(__name__)
@@ -29,23 +27,6 @@ data_queue = Queue()
 def index():
     #only by sending this page first will the client be connected to the socketio instance
     return render_template('index.html')
-
-@app.route('/save_csv', methods=['POST'])
-def save_csv():
-    data = request.get_json()
-    df = pd.DataFrame(data)
-    
-    output_dir = 'output'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    file_path = os.path.join(output_dir, f'{timestamp}.csv')
-
-    # Save DataFrame to CSV
-    df.to_csv(file_path, index=False)
-    
-    return jsonify(message='CSV file saved successfully')
 
 @app.route('/capture', methods=['POST'])
 def capture():

@@ -178,17 +178,34 @@
           vhrms: config.data.datasets[0].vhrms
         }
         
-        fetch('/save_csv', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(datavalue)
-        })
-        .then(response => response.json())
-        .catch((error) => {
-            console.alert('Error:', error);
+        // Convert datavalue to CSV
+        var csv_file = 'x,y,datetime,lon,lat,heigh,rtk,hrms,vhrms\n';
+        var rows = datavalue.x.map((_, i) => {
+          return [
+            datavalue.x[i],
+            datavalue.y[i],
+            datavalue.datetime[i],
+            datavalue.lon[i],
+            datavalue.lat[i],
+            datavalue.heigh[i],
+            datavalue.rtk[i],
+            datavalue.hrms[i],
+            datavalue.vhrms[i]
+          ].join(',');
         });
+        csv_file += rows.join('\n');
+
+        // Create a Blob from the CSV string
+        var blob = new Blob([csv_file], { type: 'text/csv' });
+
+        // Create link
+        var timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${timestamp}.csv`;
+
+        // Download the link
+        link.click();
       });
     }
 
