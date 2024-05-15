@@ -50,6 +50,9 @@
     }
 
     function clear_func() {
+      // save the csv file first 
+      save_csv_func();
+
       // Remove all charts and data
       //  console.log("clear");
       ChartList = [];
@@ -61,6 +64,7 @@
           child.remove()
         }
       }
+
     }
 
     function Create2DArray(rows, columns) {
@@ -205,9 +209,11 @@
     }
 
     function connect_func() {
-      //connect to the socket server.
-      var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-      var numbers_received = [];
+      if (connected) {
+        return;
+      }
+
+      connected = true;
 
       //receive socket from server
       socket.on('server', function (data) {
@@ -451,7 +457,13 @@
     var paus = false;
     var capture = false;
     var demo_scroll = false;
+    var socket = NaN;
+    var connected = false;
     var ChartList = [];
+
+    $(document).ready(function () {
+      socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+    });
 
   </script>
 </head>
