@@ -39,7 +39,7 @@ def start_flask_application():
     from config_handler import ConfigHandler
     [HOST,PORT] = ConfigHandler().get_all("Flask") # pylint: disable=unbalanced-tuple-unpacking
     socketio.run(app, host=HOST, port=PORT) # SocketIOServer
-    app.run(host=HOST, port=PORT) # Other Server
+    # app.run(host=HOST, port=PORT) # Other Server
 
 @app.route('/')
 def index():
