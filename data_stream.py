@@ -67,7 +67,7 @@ class DataStream(Thread):
                     'xmax': self.config.xmax,
                     'ymin': self.config.ymin,
                     'ymax': self.config.ymax
-                }, namespace='/test')
+                })
             
             time.sleep(self.config.delay)
 
@@ -103,5 +103,4 @@ def send_request(id, data, type = 'line', active_points = 20, _label="Value", _l
      'height': _height,
      "backgroundColor": backgroundColor,
      "borderColor" : borderColor,
-     "fill" : fill},
-      namespace='/test')
+     "fill" : fill})

@@ -134,8 +134,8 @@ def receive_data():
     
     return jsonify(message='Data received successfully')
 
-@socketio.on('connect', namespace='/test')
-def test_connect():
+@socketio.on('connect')
+def connect():
     # need visibility of the global thread object
     global thread
     print('Flask Client connected')
@@ -148,6 +148,6 @@ def test_connect():
     #if not thread.is_alive():
     #    scheduler()
 
-@socketio.on('disconnect', namespace='/test')
-def test_disconnect():
+@socketio.on('disconnect')
+def disconnect():
     print('Flask Client disconnected')
