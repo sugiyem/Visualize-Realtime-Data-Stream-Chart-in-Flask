@@ -218,9 +218,10 @@
       }
 
       ChartList.forEach(function(chart) {
+        var timestamp = new Date().toISOString().replace(/[:.-]/g, '_');
         var link = document.createElement('a');
         link.href = chart.toBase64Image();
-        link.download = chart.config.id + '.png';
+        link.download = `${timestamp}.png`;
         link.click();
       });
     }
