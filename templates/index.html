@@ -300,12 +300,20 @@
                 display: true,
                 labelString: 'x'
               },
+              ticks: {
+                suggestedMin: data.xmin,
+                suggestedMax: data.xmax
+              }
             }],
             yAxes: [{
               display: true,
               scaleLabel: {
                 display: true,
                 labelString: 'y'
+              },
+              ticks: {
+                suggestedMin: data.ymin,
+                suggestedMax: data.ymax
               }
             }]
           }

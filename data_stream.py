@@ -12,7 +12,8 @@ class Config():
     def __init__(self, _id= 0, _type = 'scatter', _active_points = 10,
      _delay = 1, _name = "RealtimeGraph", _label=["Value"], _legend=["data"],
       _width = 200, _height = 100, backgroundColor = ["rgb(255, 99, 132)"],
-       borderColor = ["rgb(255, 99, 132)"], fill = "false"):
+       borderColor = ["rgb(255, 99, 132)"], fill = "false", 
+       xmin = -1.0, xmax = 1.0, ymin = -1.0, ymax = 1.0):
         self.type = _type
         self.active_points = _active_points
         self.delay = _delay = 1
@@ -25,6 +26,10 @@ class Config():
         self.backgroundColor = backgroundColor
         self.borderColor = borderColor
         self.fill = fill
+        self.xmin = xmin
+        self.xmax = xmax 
+        self.ymin = ymin 
+        self.ymax = ymax
 
 class DataStream(Thread):
     def __init__(self, _config, _data_func):
@@ -56,43 +61,12 @@ class DataStream(Thread):
                 "backgroundColor": self.config.backgroundColor,
                 "borderColor" : self.config.borderColor,
                 "fill" : self.config.fill,
+                'xmin': self.config.xmin,
+                'xmax': self.config.xmax,
+                'ymin': self.config.ymin,
+                'ymax': self.config.ymax
             }, namespace='/test')
             time.sleep(self.config.delay)
-
-class LocDataStream(Thread):
-    def __init__(self, _config, _data_func):
-        super(LocDataStream, self).__init__()
-        self.data_func = _data_func
-        self.config = _config
-
-    def run(self):
-        while not flask_handler.thread_stop_event.isSet():
-            x, y, lon, lat, heigh, rtk, hrms, vrhms = self.data_func()
-            flask_handler.socketio.emit('server',
-            {'id':self.config.id,
-            'time': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-            'x': [x],
-            'y': [y],
-            'value': [y],
-             'lon': [lon],
-             'lat': [lat],
-             'heigh': [heigh],
-             'rtk': [rtk],
-             'hrms': [hrms],
-             'vhrms': [vrhms],
-             'type': self.config.type,
-             'active_points': self.config.active_points,
-             'label': self.config.label,
-             'legend': self.config.legend,
-             'name': self.config.name,
-             'width': self.config.width,
-             'height': self.config.height,
-             "backgroundColor": self.config.backgroundColor,
-             "borderColor" : self.config.borderColor,
-             "fill" : self.config.fill,
-             }, namespace='/test')
-            time.sleep(self.config.delay)
-
 
 
 def def_param(vari, deff):
