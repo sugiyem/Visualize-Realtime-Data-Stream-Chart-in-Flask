@@ -25,4 +25,9 @@ def ransac(x_arr, y_arr, threshold=1e-4, deg=1):
     return poly.polyfit(x_vals, y_vals, deg)
 
 def estimate(x_arr, y_arr):
-    return ransac(x_arr, y_arr)
+    coefs = ransac(x_arr, y_arr)
+    xplot_min = np.min(x_arr)
+    yplot_min = poly.polyval(xplot_min, coefs)
+    xplot_max = np.max(x_arr)
+    yplot_max = poly.polyval(xplot_max, coefs)
+    return round(coefs[0], 3), round(coefs[1], 3), xplot_min, yplot_min, xplot_max, yplot_max

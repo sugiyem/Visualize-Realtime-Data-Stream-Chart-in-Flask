@@ -97,15 +97,17 @@ def capture():
     displayed_df = df if len(df) < 10 else df.tail(10)
 
     try:
-        coefs = estimate(displayed_df['x'].to_numpy(), displayed_df['y'].to_numpy()) # curve estimator is y = mx + b
-        b = round(coefs[0], 3)
-        m = round(coefs[1], 3)
+        bias, weight, xplot_min, yplot_min, xplot_max, yplot_max = estimate(displayed_df['x'].to_numpy(), displayed_df['y'].to_numpy()) # curve estimator is y = mx + b
     except Exception as e:
         return jsonify({'error': str(e)})
      
     return jsonify({
-        'weight': m,
-        'bias': b
+        'bias': bias,
+        'weight': weight,
+        'xplot_min': xplot_min,
+        'yplot_min': yplot_min,
+        'xplot_max': xplot_max,
+        'yplot_max': xplot_max
     })
 
 @socketio.on('connect', namespace='/test')
