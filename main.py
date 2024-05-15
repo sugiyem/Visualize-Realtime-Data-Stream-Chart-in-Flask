@@ -45,7 +45,7 @@ def capture():
         'xplot_min': xplot_min,
         'yplot_min': yplot_min,
         'xplot_max': xplot_max,
-        'yplot_max': xplot_max
+        'yplot_max': yplot_max
     })
 
 @app.route('/data', methods=['POST'])
